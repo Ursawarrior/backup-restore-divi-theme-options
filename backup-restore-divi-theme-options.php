@@ -12,22 +12,30 @@
  * Text Domain: backup-restore-divi-theme-options
  */
 
-
+// Main plugins class
 class backup_restore_divi_theme_options {
 
+  // Register a plugin menu in the main admin menu.  
 	function backup_restore_divi_theme_options() {
 		add_action('admin_menu', array(&$this, 'admin_menu'));
 	}
+
+  // Registration activities performed by menu plugin.
 	function admin_menu() {
 
+    // Generate submenu page
 		$page = add_submenu_page('tools.php', 'Backup/Restore Theme Options', 'Backup/Restore Theme Options', 'manage_options', 'backup-restore-divi-theme-options', array(&$this, 'options_page'));
 
+    // Registration call of action for imports and exports.
 		add_action("load-{$page}", array(&$this, 'import_export'));
 
+    // Register a submenu page for plugin main menu. 
 		add_submenu_page( 'et_divi_options',__( 'Backup/Restore Theme Options', 'Divi' ), __( 'Backup/Restore Theme Options', 'Divi' ), 'manage_options', 'tools.php?page=backup-restore-divi-theme-options', 'backup-restore-divi-theme-options' );
 
 	}
 	function import_export() {
+
+    // Download actions, return backup file to users.  
 		if (isset($_GET['action']) && ($_GET['action'] == 'download')) {
 			header("Cache-Control: public, must-revalidate");
 			header("Pragma: hack");
@@ -36,21 +44,30 @@ class backup_restore_divi_theme_options {
 			echo serialize($this->_get_options());
 			die();
 		}
+
+    // Restore actions, get file from users after all checks. 
 		if (isset($_POST['upload']) && check_admin_referer('shapeSpace_restoreOptions', 'shapeSpace_restoreOptions')) {
+
+      // Check attached files if exists - restore then. 
 			if ($_FILES["file"]["error"] > 0) {
 				// error
 			} else {
+        // get files 
 				$options = unserialize(file_get_contents($_FILES["file"]["tmp_name"]));
 				if ($options) {
+          // upload and save all files 
 					foreach ($options as $option) {
 						update_option($option->option_name, unserialize($option->option_value));
 					}
 				}
 			}
+      // After user is upload files, return user to a plugin page. 
 			wp_redirect(admin_url('tools.php?page=backup-restore-divi-theme-options'));
 			exit;
 		}
 	}
+  
+  // Generate html for a plugin action page 
 	function options_page() { ?>
 
 		<div class="wrap">
@@ -78,13 +95,19 @@ class backup_restore_divi_theme_options {
 		</div>
 
 	<?php }
+
+  // Call for options initializations and serializations then. 
 	function _display_options() {
 		$options = unserialize($this->_get_options());
 	}
+
+  // Get plugin options from database. 
 	function _get_options() {
 		global $wpdb;
 		return $wpdb->get_results("SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name = 'et_divi'"); // edit 'shapeSpace_options' to match theme options
 	}
 }
+
+// initialize plugin 
 new backup_restore_divi_theme_options();
 ?>
